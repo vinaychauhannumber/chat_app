@@ -108,6 +108,24 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  deleteMessage: async (messageId) => {
+    try {
+      const { error } = await supabase
+        .from("messages")
+        .delete()
+        .eq("id", messageId);
+
+      if (error) throw error;
+
+      set({
+        messages: get().messages.filter((m) => m.id !== messageId && m._id !== messageId),
+      });
+      toast.success("Message unsent");
+    } catch (error) {
+      toast.error(error.message || "Failed to unsend message");
+    }
+  },
+
   subscribeToMessages: () => {
     const { selectedUser } = get();
     if (!selectedUser) return;
@@ -137,6 +155,20 @@ export const useChatStore = create((set, get) => ({
               messages: [...get().messages, mappedMessage],
             });
           }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "messages",
+        },
+        (payload) => {
+          const deletedId = payload.old.id;
+          set({
+            messages: get().messages.filter((m) => m.id !== deletedId && m._id !== deletedId),
+          });
         }
       )
       .subscribe();

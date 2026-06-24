@@ -6,6 +6,7 @@ import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
+import { Trash2 } from "lucide-react";
 
 const ChatContainer = () => {
   const {
@@ -15,6 +16,7 @@ const ChatContainer = () => {
     selectedUser,
     subscribeToMessages,
     unsubscribeFromMessages,
+    deleteMessage,
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
@@ -51,7 +53,7 @@ const ChatContainer = () => {
         {messages.map((message) => (
           <div
             key={message._id}
-            className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
+            className={`chat group ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
             ref={messageEndRef}
           >
             <div className=" chat-image avatar">
@@ -71,15 +73,26 @@ const ChatContainer = () => {
                 {formatMessageTime(message.createdAt)}
               </time>
             </div>
-            <div className="chat-bubble flex flex-col">
-              {message.image && (
-                <img
-                  src={message.image}
-                  alt="Attachment"
-                  className="sm:max-w-[200px] rounded-md mb-2"
-                />
+            <div className="flex items-center gap-2">
+              {message.senderId === authUser._id && (
+                <button
+                  onClick={() => deleteMessage(message._id)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-base-content/40 hover:text-error rounded-full hover:bg-base-200"
+                  title="Unsend message"
+                >
+                  <Trash2 className="size-4" />
+                </button>
               )}
-              {message.text && <p>{message.text}</p>}
+              <div className="chat-bubble flex flex-col">
+                {message.image && (
+                  <img
+                    src={message.image}
+                    alt="Attachment"
+                    className="sm:max-w-[200px] rounded-md mb-2"
+                  />
+                )}
+                {message.text && <p>{message.text}</p>}
+              </div>
             </div>
           </div>
         ))}
